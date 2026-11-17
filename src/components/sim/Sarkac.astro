@@ -1,0 +1,392 @@
+---
+// Basit sarkaç simülasyonu. Bir MDX sayfasına gömmek için:
+//   import Sarkac from '@/components/sim/Sarkac.astro';
+//   <Sarkac />
+// İsteğe bağlı başlangıç değerleri: <Sarkac uzunluk={1.5} aci={120} g={1.62} />
+//
+// Yeni bir simülasyon yazarken bu dosyayı kopyalayıp iskelet olarak kullanabilirsin:
+// üstte HTML (tuval + kaydırıcılar), ortada stil, altta sade JavaScript.
+interface Props {
+  uzunluk?: number;
+  aci?: number;
+  g?: number;
+}
+const { uzunluk = 1, aci = 60, g = 9.81 } = Astro.props;
+---
+
+<figure class="sim" data-sarkac>
+  <figcaption class="etiket">SİMÜLASYON · BASİT SARKAÇ</figcaption>
+
+  <div class="tuvaller">
+    <canvas class="sarkaclar" aria-label="Solda küçük açı yaklaşımı, sağda gerçek hareket"></canvas>
+    <canvas class="grafik" aria-label="Açının zamana göre grafiği"></canvas>
+  </div>
+
+  <div class="aciklama">
+    <span><i class="renk yaklasim"></i>Küçük açı yaklaşımı</span>
+    <span><i class="renk gercek"></i>Gerçek hareket (sayısal çözüm)</span>
+  </div>
+
+  <div class="kontroller">
+    <label>
+      <span>Uzunluk L = <output data-cikti="L"></output> m</span>
+      <input type="range" data-giris="L" min="0.2" max="3" step="0.05" value={uzunluk} />
+    </label>
+    <label>
+      <span>Başlangıç açısı = <output data-cikti="aci"></output>°</span>
+      <input type="range" data-giris="aci" min="1" max="175" step="1" value={aci} />
+    </label>
+    <label>
+      <span>Yerçekimi g = <output data-cikti="g"></output> m/s²</span>
+      <input type="range" data-giris="g" min="1" max="25" step="0.01" value={g} />
+    </label>
+  </div>
+
+  <div class="dugmeler">
+    <button class="dugme" data-is="oynat">Durdur</button>
+    <button class="dugme" data-is="bastan">Baştan</button>
+    <span class="ayrac"></span>
+    <button class="dugme" data-g="1.62">Ay</button>
+    <button class="dugme" data-g="3.71">Mars</button>
+    <button class="dugme" data-g="9.81">Dünya</button>
+    <button class="dugme" data-g="24.79">Jüpiter</button>
+  </div>
+
+  <dl class="okuma">
+    <div><dt>Periyot (yaklaşım)</dt><dd data-cikti="T0"></dd></div>
+    <div><dt>Periyot (gerçek)</dt><dd data-cikti="T"></dd></div>
+    <div><dt>Fark</dt><dd data-cikti="fark"></dd></div>
+  </dl>
+</figure>
+
+<style>
+  .sim {
+    margin: 1.6rem 0;
+    padding: 1rem;
+    border: 1px solid var(--cizgi-parlak);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--zemin) 70%, transparent);
+  }
+  .tuvaller {
+    display: grid;
+    gap: 0.6rem;
+    margin-top: 0.6rem;
+  }
+  canvas {
+    width: 100%;
+    display: block;
+    border: 1px solid var(--cizgi);
+    border-radius: 8px;
+  }
+  .sarkaclar {
+    height: 250px;
+  }
+  .grafik {
+    height: 190px;
+  }
+  .aciklama {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.4rem;
+    font-size: 0.85rem;
+    color: var(--soluk);
+    margin: 0.6rem 0 0.9rem;
+  }
+  .renk {
+    display: inline-block;
+    width: 18px;
+    height: 3px;
+    margin-right: 0.45rem;
+    vertical-align: middle;
+    border-radius: 2px;
+  }
+  .renk.yaklasim {
+    background: var(--sicak);
+  }
+  .renk.gercek {
+    background: var(--vurgu);
+  }
+  .kontroller {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 0.8rem 1.4rem;
+  }
+  label span {
+    display: block;
+    font-family: var(--yazi-hud);
+    font-size: 12.5px;
+    color: var(--soluk);
+  }
+  output {
+    color: var(--metin);
+  }
+  input[type='range'] {
+    width: 100%;
+    accent-color: var(--vurgu);
+    height: 28px;
+  }
+  .dugmeler {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0.9rem 0;
+  }
+  .ayrac {
+    flex: 1;
+  }
+  .okuma {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.6rem;
+    margin: 0;
+  }
+  .okuma div {
+    border: 1px solid var(--cizgi);
+    border-radius: 8px;
+    padding: 0.5rem 0.7rem;
+  }
+  dt {
+    font-family: var(--yazi-hud);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--soluk);
+  }
+  dd {
+    margin: 0;
+    font-family: var(--yazi-hud);
+    font-size: 1.05rem;
+  }
+</style>
+
+<script>
+  import { animAcik, ayarDegisince } from '../../scripts/ayarlar.js';
+
+  const PERIYOT_SAYISI = 6; // grafikte kaç yaklaşım periyodu gösterilsin
+  const NOKTA = 400; // periyot başına hesap adımı
+
+  document.querySelectorAll<HTMLElement>('[data-sarkac]').forEach((kok) => {
+    const cS = kok.querySelector<HTMLCanvasElement>('.sarkaclar')!;
+    const cG = kok.querySelector<HTMLCanvasElement>('.grafik')!;
+    const xS = cS.getContext('2d')!;
+    const xG = cG.getContext('2d')!;
+    const giris = (ad: string) => kok.querySelector<HTMLInputElement>(`[data-giris="${ad}"]`)!;
+    const cikti = (ad: string) => kok.querySelector<HTMLElement>(`[data-cikti="${ad}"]`)!;
+    const oynatDugme = kok.querySelector<HTMLButtonElement>('[data-is="oynat"]')!;
+
+    // Durum
+    let L = 1;
+    let aci0 = 1; // radyan
+    let g = 9.81;
+    let T0 = 1; // küçük açı periyodu
+    let cozum: Float32Array = new Float32Array(0); // gerçek hareketin açı değerleri
+    let h = 0.001; // zaman adımı
+    let t = 0;
+    let oynuyor = animAcik();
+    let gorunur = false;
+    let kareId = 0;
+    let onceki = 0;
+
+    /** Parametreler değişince: periyotları ve sayısal çözümü baştan hesapla. */
+    function hesapla() {
+      L = +giris('L').value;
+      g = +giris('g').value;
+      aci0 = (+giris('aci').value * Math.PI) / 180;
+      const w2 = g / L; // omega²
+      T0 = (2 * Math.PI) / Math.sqrt(w2);
+
+      // Gerçek periyot: T = T0 / AGM(1, cos(aci0/2)). AGM = aritmetik-geometrik ortalama.
+      let a = 1;
+      let b = Math.cos(aci0 / 2);
+      for (let i = 0; i < 12; i++) [a, b] = [(a + b) / 2, Math.sqrt(a * b)];
+      const T = T0 / a;
+
+      // Gerçek hareket: θ'' = −(g/L) sin θ denklemini 4. derece Runge–Kutta (RK4) ile çöz.
+      // Durum: θ (açı) ve w (açısal hız). f(θ) = −(g/L) sin θ ivmedir.
+      const n = PERIYOT_SAYISI * NOKTA + 1;
+      h = T0 / NOKTA;
+      cozum = new Float32Array(n);
+      let th = aci0;
+      let w = 0;
+      const f = (x: number) => -w2 * Math.sin(x);
+      for (let i = 0; i < n; i++) {
+        cozum[i] = th;
+        const k1t = w, k1w = f(th);
+        const k2t = w + (h / 2) * k1w, k2w = f(th + (h / 2) * k1t);
+        const k3t = w + (h / 2) * k2w, k3w = f(th + (h / 2) * k2t);
+        const k4t = w + h * k3w, k4w = f(th + h * k3t);
+        th += (h / 6) * (k1t + 2 * k2t + 2 * k3t + k4t);
+        w += (h / 6) * (k1w + 2 * k2w + 2 * k3w + k4w);
+      }
+
+      cikti('L').textContent = L.toFixed(2);
+      cikti('g').textContent = g.toFixed(2);
+      cikti('aci').textContent = giris('aci').value;
+      cikti('T0').textContent = T0.toFixed(3) + ' s';
+      cikti('T').textContent = T.toFixed(3) + ' s';
+      cikti('fark').textContent = '%' + ((T / T0 - 1) * 100).toFixed(2);
+      t = 0;
+      ciz();
+    }
+
+    const yaklasim = (zaman: number) => aci0 * Math.cos((2 * Math.PI * zaman) / T0);
+    function gercek(zaman: number) {
+      const u = zaman / h;
+      const i = Math.min(Math.floor(u), cozum.length - 2);
+      return cozum[i] + (cozum[i + 1] - cozum[i]) * (u - i);
+    }
+
+    function boyutla(c: HTMLCanvasElement, x: CanvasRenderingContext2D) {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = c.clientWidth;
+      const hh = c.clientHeight;
+      if (c.width !== Math.round(w * dpr) || c.height !== Math.round(hh * dpr)) {
+        c.width = Math.round(w * dpr);
+        c.height = Math.round(hh * dpr);
+      }
+      x.setTransform(dpr, 0, 0, dpr, 0, 0);
+      x.clearRect(0, 0, w, hh);
+      return [w, hh];
+    }
+
+    function ciz() {
+      const stil = getComputedStyle(kok);
+      const R = {
+        yak: stil.getPropertyValue('--sicak').trim(),
+        ger: stil.getPropertyValue('--vurgu').trim(),
+        soluk: stil.getPropertyValue('--soluk').trim(),
+        cizgi: stil.getPropertyValue('--cizgi').trim(),
+        metin: stil.getPropertyValue('--metin').trim(),
+      };
+
+      // ---- Sarkaçlar ----
+      {
+        const [w, hh] = boyutla(cS, xS);
+        const olcek = Math.min((hh - 70) / 3, w / 4 / 3.1); // piksel / metre (en uzun ip sığacak şekilde)
+        const Lp = L * olcek;
+        // Açı 90°'yi geçince top askı noktasının üstüne çıkar; askıyı o kadar aşağı al
+        const askiY = 34 + Math.max(0, -Math.cos(aci0)) * Lp;
+        const tek = (merkezX: number, aci: number, renk: string, ad: string) => {
+          const bx = merkezX + Lp * Math.sin(aci);
+          const by = askiY + Lp * Math.cos(aci);
+          xS.strokeStyle = R.cizgi;
+          xS.lineWidth = 1;
+          xS.setLineDash([4, 4]);
+          xS.beginPath(); // düşey denge çizgisi
+          xS.moveTo(merkezX, askiY);
+          xS.lineTo(merkezX, askiY + Lp + 14);
+          xS.stroke();
+          xS.setLineDash([]);
+          xS.strokeStyle = R.soluk;
+          xS.lineWidth = 1.5;
+          xS.beginPath(); // ip
+          xS.moveTo(merkezX, askiY);
+          xS.lineTo(bx, by);
+          xS.stroke();
+          xS.fillStyle = R.soluk;
+          xS.fillRect(merkezX - 16, askiY - 3, 32, 3); // askı
+          xS.fillStyle = renk;
+          xS.beginPath(); // top
+          xS.arc(bx, by, 9, 0, Math.PI * 2);
+          xS.fill();
+          xS.fillStyle = R.metin;
+          xS.font = '12px ui-monospace, monospace';
+          xS.textAlign = 'center';
+          xS.fillText(ad, merkezX, 16);
+          xS.fillStyle = R.soluk;
+          xS.fillText(((aci * 180) / Math.PI).toFixed(1) + '°', merkezX, hh - 8);
+        };
+        tek(w * 0.27, yaklasim(t), R.yak, 'Küçük açı yaklaşımı');
+        tek(w * 0.73, gercek(t), R.ger, 'Gerçek');
+      }
+
+      // ---- Grafik: açı – zaman ----
+      {
+        const [w, hh] = boyutla(cG, xG);
+        const sol = 8, sag = w - 8, orta = hh / 2;
+        const tMax = PERIYOT_SAYISI * T0;
+        const X = (zaman: number) => sol + ((sag - sol) * zaman) / tMax;
+        const Y = (a: number) => orta - (a / aci0) * (hh / 2 - 18);
+        xG.strokeStyle = R.cizgi;
+        xG.lineWidth = 1;
+        xG.beginPath();
+        xG.moveTo(sol, orta);
+        xG.lineTo(sag, orta);
+        xG.stroke();
+        const egri = (fn: (z: number) => number, renk: string) => {
+          xG.strokeStyle = renk;
+          xG.lineWidth = 1.8;
+          xG.beginPath();
+          for (let i = 0; i <= 600; i++) {
+            const z = (tMax * i) / 600;
+            i ? xG.lineTo(X(z), Y(fn(z))) : xG.moveTo(X(z), Y(fn(z)));
+          }
+          xG.stroke();
+        };
+        egri(yaklasim, R.yak);
+        egri(gercek, R.ger);
+        // şimdiki an
+        xG.strokeStyle = R.soluk;
+        xG.lineWidth = 1;
+        xG.beginPath();
+        xG.moveTo(X(t), 6);
+        xG.lineTo(X(t), hh - 6);
+        xG.stroke();
+        for (const [fn, renk] of [[yaklasim, R.yak], [gercek, R.ger]] as const) {
+          xG.fillStyle = renk;
+          xG.beginPath();
+          xG.arc(X(t), Y(fn(t)), 4, 0, Math.PI * 2);
+          xG.fill();
+        }
+        xG.fillStyle = R.soluk;
+        xG.font = '11px ui-monospace, monospace';
+        xG.textAlign = 'left';
+        xG.fillText('açı', sol + 2, 13);
+        xG.textAlign = 'right';
+        xG.fillText('zaman →  t = ' + t.toFixed(2) + ' s', sag - 2, hh - 6);
+      }
+    }
+
+    function dongu(simdi: number) {
+      const dt = Math.min(0.05, (simdi - onceki) / 1000);
+      onceki = simdi;
+      t += dt;
+      if (t > PERIYOT_SAYISI * T0) t = 0; // grafik bitince baştan başla
+      ciz();
+      kareId = oynuyor && gorunur && !document.hidden ? requestAnimationFrame(dongu) : 0;
+    }
+    function uyandir() {
+      oynatDugme.textContent = oynuyor ? 'Durdur' : 'Başlat';
+      if (oynuyor && gorunur && !kareId) {
+        onceki = performance.now();
+        kareId = requestAnimationFrame(dongu);
+      }
+    }
+
+    kok.querySelectorAll<HTMLInputElement>('[data-giris]').forEach((el) => el.addEventListener('input', hesapla));
+    kok.querySelectorAll<HTMLButtonElement>('[data-g]').forEach((d) =>
+      d.addEventListener('click', () => {
+        giris('g').value = d.dataset.g!;
+        hesapla();
+      }),
+    );
+    oynatDugme.addEventListener('click', () => {
+      oynuyor = !oynuyor;
+      uyandir();
+    });
+    kok.querySelector('[data-is="bastan"]')!.addEventListener('click', () => {
+      t = 0;
+      ciz();
+    });
+    new IntersectionObserver((g) => {
+      gorunur = g[0].isIntersecting;
+      uyandir();
+    }).observe(kok);
+    window.addEventListener('resize', ciz);
+    document.addEventListener('visibilitychange', uyandir);
+    ayarDegisince(ciz); // tema değişince renkleri yenile
+
+    hesapla();
+    uyandir();
+  });
+</script>

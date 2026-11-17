@@ -1,0 +1,66 @@
+---
+# FİZİK SAYFASI ŞABLONU
+# Kullanım: bu dosyayı src/content/fizik/<ders-klasoru>/<konu-adi>.mdx olarak kopyala.
+# Dosya adı adres olur: küçük harf, Türkçe karakter yok, boşluk yerine tire (ör. kepler-problemi.mdx).
+baslik: Konunun Başlığı
+ozet: Liste sayfasında görünecek bir cümlelik özet.
+sira: 10                # ders içindeki sıra (küçük olan önce)
+seviye: giris           # isteğe bağlı: giris | ileri (site.config.ts'deki seviyeler). İstemezsen satırı sil.
+etiketler: [etiket1, etiket2]
+# onceki: fizik/klasik-mekanik/basit-sarkac      # isteğe bağlı: "önce şunu oku" bağlantısı
+# ileri: [fizik/klasik-mekanik/baska-konu]       # isteğe bağlı: "daha ileri konular"
+# taslak: true                                   # true iken yayına çıkmaz
+---
+
+import Not from '@/components/Not.astro';
+
+{/* Simülasyon kullanacaksan: import Sarkac from '@/components/sim/Sarkac.astro'; */}
+
+## Ne?
+
+Konu bir iki paragrafta ne? Hangi soruya cevap arıyoruz?
+
+## Sezgi
+
+Denklem yazmadan önce: ne olmasını bekleriz, neden? Günlük hayattan ya da bildiğin bir konudan benzetme.
+
+## Matematik
+
+### 1. Adımın adı
+
+Bu adımda **ne** yapıyoruz ve **neden** yapıyoruz? Sonra denklem:
+
+$$
+F = ma
+$$
+
+Denklemin her teriminin ne anlama geldiğini yaz. Satır içi denklem şöyle yazılır: $E = mc^2$.
+
+### 2. Sonraki adım
+
+...
+
+## Simülasyon
+
+{/* <Sarkac /> gibi bir bileşen. Altına "şunu dene" maddeleri yaz. */}
+
+Simülasyon eklenecek.
+
+## Dikkat
+
+<Not tur="dikkat">
+En sık yapılan hata ya da yaklaşımın geçerli olmadığı durum.
+</Not>
+
+- Varsayımlar ve sınırlar.
+
+## Soru
+
+**1.** Soru metni.
+
+<details>
+<summary>Çözüm</summary>
+
+Çözüm adımları.
+
+</details>

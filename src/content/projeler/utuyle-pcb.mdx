@@ -1,0 +1,141 @@
+---
+baslik: Ütüyle PCB Basmak (Toner Transfer)
+ozet: Lazer yazıcı, kuşe kâğıt ve ev ütüsüyle tek katlı baskı devre. Tasarımdan lehime bütün adımlar ve sık yapılan hatalar.
+sira: 1
+etiketler: [pcb, toner transfer, lehim]
+# Yazıyı bitirene kadar yayında gizlemek istersen bunu true yap:
+# o zaman sadece bilgisayarında (npm run dev) görünür.
+taslak: false
+---
+
+import Foto from '@/components/Foto.astro';
+import Not from '@/components/Not.astro';
+
+{/* Fotoğraf eklemek için: dosyayı public/gorseller/pcb/ klasörüne koy, sonra ilgili satıra
+    src="gorseller/pcb/dosya-adi.jpg" ekle. src yazmadığın sürece yer tutucu kutu görünür. */}
+
+## Amaç
+
+Sipariş vermeden, birkaç saat içinde tek katlı bir baskı devre kartı (PCB) üretmek. Yöntemin fikri basit: lazer yazıcının toneri plastiktir ve ısıyla erir. Devre desenini kâğıda basıp ütüyle bakır plakaya yapıştırırsan toner, asidin bakırı yemesini engelleyen bir maske olur. Tonerin kapattığı yerler yol olarak kalır, geri kalan bakır erir.
+
+<Foto aciklama="Bitmiş kartın önden ve arkadan görünümü" />
+
+## Malzemeler
+
+| Malzeme | Not |
+| --- | --- |
+| Tek yüzlü bakır plaket (FR4 ya da pertinaks) | Kart boyutundan biraz büyük kes |
+| Lazer yazıcı çıktısı | Mürekkep püskürtmeli (inkjet) yazıcı **olmaz**; toner gerekir |
+| Kuşe (parlak) kâğıt | Dergi sayfası ya da 115–135 g kuşe kâğıt; ya da hazır toner transfer kâğıdı |
+| Ütü | Buharsız, en yüksek ısıya yakın |
+| Aşındırıcı | Demir (III) klorür çözeltisi ya da tuz ruhu + perhidrol karışımı |
+| Plastik ya da cam kap, plastik cımbız | Metal kap ve metal cımbız kullanılmaz |
+| İnce zımpara (800–1000) ya da bulaşık teli | Bakırı temizlemek için |
+| Aseton ya da tiner | Bakırın yağını ve en sonda toneri silmek için |
+| Matkap ve 0.8–1.0 mm uçlar | El matkabı ya da mini matkap |
+| Lehim teli, havya, flux | |
+| Eldiven, gözlük, havalandırma | Aşındırma adımı için şart |
+
+## Adımlar
+
+### 1. Tasarım
+
+Devreyi bir PCB programında (ör. KiCad) çizerim. Bu yöntemin çözünürlüğü fabrika üretimi kadar iyi değildir, bu yüzden tasarımı baştan ona göre yaparım:
+
+- Yol kalınlığı en az 0.5 mm, mümkünse 0.8 mm ve üstü.
+- Yollar ve pedler arası boşluk en az 0.4–0.5 mm.
+- Pedler büyük (delik 0.8 mm ise ped çapı en az 2 mm). Küçük ped delme sırasında kopar.
+- Tek katman. Kesişen yollar için tel köprü (jumper) kullanılır.
+- Boş alanları bakır dolguyla (copper pour) kaplamak aşındırma süresini kısaltır ve asidi daha az yorar.
+- Kartın bir köşesine küçük bir yazı koyarım; ayna yönünü kontrol etmek için işe yarıyor.
+
+<Foto aciklama="PCB programında tasarımın ekran görüntüsü" />
+
+### 2. Çıktı
+
+Toner bakıra yüzü dönük yapıştığı için desen aktarılırken **bir kez aynalanır**. Hangi katmanı nasıl basacağın buna bağlı:
+
+- **Alt bakır katmanı** (delikli komponentler üstte, yollar altta): programlar alt katmanı zaten üstten bakıyormuş gibi gösterir. Olduğu gibi, **aynalamadan** bas.
+- **Üst bakır katmanı** (SMD komponentler yolla aynı yüzde): **aynalayarak** bas.
+
+Emin olamadığında karttaki yazıya bak: kâğıtta ters okunuyorsa bakırda düz çıkar.
+
+Yazıcı ayarları: ölçek %100 (sayfaya sığdır kapalı), toner tasarrufu kapalı, en koyu baskı. Önce normal kâğıda basıp komponentleri üstüne koyarak ayak aralıklarını kontrol ederim, sonra kuşe kâğıda basarım. Baskılı yüzeye parmakla dokunmamak gerekir.
+
+<Foto aciklama="Kuşe kâğıda basılmış devre deseni" />
+
+### 3. Plakayı hazırlama
+
+Plaketi ölçüye göre keserim, kenar çapaklarını zımparalarım. Bakır yüzeyi ince zımparayla ya da bulaşık teliyle parlayana kadar ovup asetonla silerim. Yüzeyde oksit ya da parmak yağı kalırsa toner oraya tutunmaz. Temizledikten sonra yüzeye elle dokunmam.
+
+<Foto aciklama="Zımparalanmış ve temizlenmiş bakır plaket" />
+
+### 4. Ütüleme
+
+1. Kâğıdı baskılı yüzü bakıra gelecek şekilde yerleştiririm; kaymasın diye arkadan ısıya dayanıklı bantla tuttururum.
+2. Ütü buharsız, pamuk/keten ayarında. Düz ve sert bir zeminde, kâğıdın üstüne bir kat temiz kâğıt koyup bastırırım.
+3. İlk 30–60 saniye sabit bastırırım, sonra 3–5 dakika boyunca ütünün ucuyla ve kenarıyla her bölgeyi, özellikle köşeleri ve kenarları ezerek gezdiririm.
+4. Plakayı kendi kendine soğumaya bırakırım.
+5. Ilık sabunlu suda 10–15 dakika bekletirim. Kâğıt yumuşayınca çekmeden, parmakla ovarak hamur halinde dökerim.
+
+Geriye bakır üstünde siyah toner deseni kalmalı. Kopuk yollar asetat kalemiyle (permanent marker) rötuşlanır. Aktarım kötüyse asetonla silip baştan başlamak, kötü maskeyle aşındırmaktan iyidir.
+
+<Foto aciklama="Ütüleme sırasında" />
+<Foto aciklama="Kâğıt söküldükten sonra bakır üstündeki toner deseni" />
+
+### 5. Aşındırma
+
+<Not tur="dikkat" baslik="Güvenlik">
+Eldiven ve gözlük tak, açık havada ya da pencere önünde çalış. Tuz ruhu + perhidrol karışımı klor gazı çıkarır ve ısınır; kabın üstüne eğilme, kapalı kapta saklama. Kullanılmış çözelti bakır içerir, lavaboya dökülmez; ağzı açık plastik kapta biriktirilip atık kimyasal olarak verilir.
+</Not>
+
+- **Demir (III) klorür:** Yavaş ama sakin. Ilık çözeltide (40–50 °C) kabı hafifçe sallayarak 10–30 dakika.
+- **Tuz ruhu + perhidrol:** Hızlı (birkaç dakika). Yaygın tarif hacimce kabaca 3 ölçü su, 2 ölçü tuz ruhu, 1 ölçü perhidrol. Önce su, sonra tuz ruhu; perhidrol en son ve azar azar eklenir. Fazla güçlü karışım toneri de kaldırır ve ince yolları yer.
+
+Kartı plastik cımbızla ara ara kaldırıp bakarım. Açıkta bakır kalmadığı anda çıkarıp bol suyla yıkarım. Gereğinden uzun bırakırsam asit tonerin altına yürür ve yollar incelir.
+
+<Foto aciklama="Aşındırma kabında kart" />
+
+### 6. Temizlik ve delme
+
+Toneri asetonla silerim; altından parlak bakır yollar çıkar. Işığa tutup kopukluk ve kısa devre ararım, multimetrenin süreklilik modunda komşu yolları kontrol ederim.
+
+Delikleri 0.8 mm uçla (kalın bacaklı parçalar için 1.0 mm) delerim. Pedin ortasındaki aşınmış küçük boşluk ucu merkezler. FR4 tozu cam elyafıdır; solumamak için maske takarım.
+
+<Foto aciklama="Toner silindikten sonra bakır yollar" />
+<Foto aciklama="Delinmiş kart" />
+
+### 7. Lehim
+
+Çıplak bakır birkaç günde oksitlenir, bu yüzden delmeden hemen sonra lehimlerim. Yolları flux sürüp ince bir kat lehimle kaplamak (kalaylamak) kartı korur. Dizme sırası alçaktan yükseğe: önce dirençler ve diyotlar, sonra entegre soketleri, kondansatörler, en son konnektörler.
+
+<Foto aciklama="Lehimlenmiş kartın alt yüzü" />
+
+## Sık yapılan hatalar
+
+| Belirti | Sebep | Çözüm |
+| --- | --- | --- |
+| Toner bazı yerlerde bakıra geçmemiş | Yüzey kirli, ısı ya da baskı az, kenarlar ütülenmemiş | Daha iyi temizlik, daha uzun ütüleme, kenarlara ütünün ucuyla bastır |
+| Yollar yayılmış, bitişmiş | Isı ya da baskı fazla, ütü kaydırılmış | Süreyi kısalt, ütüyü sürtmeden bastır |
+| Komponent ayakları ters geliyor | Ayna yönü yanlış | 2. adımdaki kuralı uygula, yazıyla kontrol et |
+| Ayak aralıkları tutmuyor | Çıktı ölçeği %100 değil | "Sayfaya sığdır" seçeneğini kapat, normal kâğıtta dene |
+| Yollar incelmiş, delik deşik | Aşındırmada fazla beklemiş ya da karışım fazla güçlü | Kartı sık kontrol et, karışımı seyrelt |
+| Aşındırma hiç ilerlemiyor | Çözelti soğuk ya da doymuş | Çözeltiyi ılıt, yenile |
+| Kâğıt sökülürken toner de kalkıyor | Yeterince suda beklememiş, kâğıt çekilerek sökülmüş | Daha uzun beklet, ovarak dök |
+| Delerken ped kopuyor | Ped küçük, uç kör | Pedi büyüt, yeni uç kullan |
+
+## Sonuç
+
+{/* Kart çalıştı mı? Kaçıncı denemede oldu? En ince yol kaç mm çıktı? Buraya kendi sonucunu yaz. */}
+
+_Bu bölümü kartı bastıktan sonra dolduracağım._
+
+## Öğrendiklerim
+
+{/* Bir dahaki sefere neyi farklı yapardın? */}
+
+_Bu bölümü kartı bastıktan sonra dolduracağım._
+
+## Fotoğraflar
+
+<Foto aciklama="Süreçten diğer fotoğraflar" />

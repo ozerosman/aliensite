@@ -1,0 +1,55 @@
+---
+# ELEKTRONİK SAYFASI ŞABLONU
+# Kullanım: bu dosyayı src/content/elektronik/<ders-klasoru>/<komponent-adi>.mdx olarak kopyala.
+baslik: Komponentin Adı
+ozet: Liste sayfasında görünecek bir cümlelik özet.
+sira: 10
+# seviye: giris
+etiketler: [etiket1]
+# onceki: elektronik/temel-komponentler/direnc
+# ileri: [elektronik/aktif-komponentler/transistor]
+---
+
+import Foto from '@/components/Foto.astro';
+import Not from '@/components/Not.astro';
+
+## Ne işe yarar?
+
+Devrede hangi işi görür? Nerelerde karşımıza çıkar?
+
+<Foto aciklama="Komponentin fotoğrafı ve devre sembolü" />
+
+## Nasıl çalışır?
+
+İçinde fiziksel olarak ne oluyor? Gerekirse denklem: $V = IR$
+
+## Datasheet'ten okunacaklar
+
+| Parametre | Sembol | Tipik değer | Ne anlama geliyor? |
+| --- | --- | --- | --- |
+| Örnek: en yüksek akım | $I_{max}$ | 20 mA | Bu değerin üstünde komponent zarar görür |
+
+## Pinler
+
+| Pin | Ad | Görev |
+| --- | --- | --- |
+| 1 | | |
+| 2 | | |
+
+<Foto aciklama="Pin diyagramı" />
+
+## Devreye bağlama
+
+Hangi pin nereye? Yanına hangi yardımcı elemanlar (ön direnç, bypass kondansatörü vb.) gerekir ve değeri nasıl hesaplanır?
+
+## Örnek devre ve simülasyon
+
+<Foto aciklama="Örnek devre şeması" />
+
+## Sık yapılan hatalar
+
+<Not tur="dikkat">
+En pahalıya patlayan hata.
+</Not>
+
+- Hata → sonucu → nasıl önlenir.

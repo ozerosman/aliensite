@@ -1,0 +1,59 @@
+---
+// Fotoğraf ya da fotoğraf yer tutucusu. MDX içinde:
+//   import Foto from '@/components/Foto.astro';
+//   <Foto aciklama="Ütüleme sonrası bakır yüzey" />                      → yer tutucu kutu çıkar
+//   <Foto src="gorseller/pcb/utu.jpg" aciklama="Ütüleme sonrası ..." />  → fotoğraf çıkar
+// Fotoğrafı public/gorseller/... altına koy; src'yi "public" yazmadan ver.
+import { dosya } from '../lib/icerik';
+
+interface Props {
+  src?: string;
+  aciklama: string;
+}
+const { src, aciklama } = Astro.props;
+---
+
+<figure class="foto">
+  {
+    src ? (
+      <img src={dosya(src)} alt={aciklama} loading="lazy" />
+    ) : (
+      <div class="yer-tutucu">
+        <span class="etiket soluk">FOTOĞRAF EKLENECEK</span>
+        <span>{aciklama}</span>
+      </div>
+    )
+  }
+  {src && <figcaption>{aciklama}</figcaption>}
+</figure>
+
+<style>
+  .foto {
+    margin: 1.3rem 0;
+  }
+  img {
+    width: 100%;
+    display: block;
+    border: 1px solid var(--cizgi);
+  }
+  figcaption {
+    font-size: 0.85rem;
+    color: var(--soluk);
+    margin-top: 0.4rem;
+  }
+  .yer-tutucu {
+    aspect-ratio: 16 / 9;
+    max-height: 300px;
+    width: 100%;
+    display: grid;
+    place-content: center;
+    gap: 0.3rem;
+    text-align: center;
+    padding: 1rem;
+    color: var(--soluk);
+    font-size: 0.9rem;
+    border: 1px dashed var(--cizgi-parlak);
+    border-radius: 10px;
+    background: repeating-linear-gradient(45deg, transparent 0 14px, color-mix(in srgb, var(--vurgu) 5%, transparent) 14px 15px);
+  }
+</style>

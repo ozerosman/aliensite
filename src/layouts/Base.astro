@@ -1,0 +1,120 @@
+---
+// Bütün sayfaların ortak iskeleti: <head>, arka plan, HUD çerçevesi, menü, alt bilgi.
+import '@fontsource-variable/inter';
+import '@fontsource-variable/space-grotesk';
+import '@fontsource-variable/jetbrains-mono';
+import '../styles/global.css';
+import { site, ekSayfalar } from '../site.config';
+import { agac, yol, dosya } from '../lib/icerik';
+
+interface Props {
+  baslik?: string;
+  aciklama?: string;
+  /** İçerik sayfalarında arka planı sakinleştirir. */
+  sakin?: boolean;
+  /** HUD'un sağ alt köşesinde görünen yazı. */
+  konum?: string;
+}
+const { baslik, aciklama = site.aciklama, sakin = false, konum = 'SEKTÖR 00 · ANA ÜS' } = Astro.props;
+const tamBaslik = baslik ? `${baslik} · ${site.ad}` : site.baslik;
+const su_an = Astro.url.pathname;
+// Menü: yapılandırmadaki bölümler + içerikte kendiliğinden bulunan yeni bölümler + tekil sayfalar
+const menu = [
+  ...(await agac()).filter((b) => b.menude !== false).map((b) => ({ baslik: b.baslik, url: b.url })),
+  ...ekSayfalar.map((s) => ({ baslik: s.baslik, url: yol(s.yol) })),
+];
+---
+
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{tamBaslik}</title>
+    <meta name="description" content={aciklama} />
+    <meta name="theme-color" content="#04050b" />
+    <link rel="icon" type="image/svg+xml" href={dosya('favicon.svg')} />
+    <!-- Sayfa çizilmeden önce kayıtlı tema ve animasyon ayarını uygular (yanıp sönmeyi önler). -->
+    <script is:inline>
+      (function () {
+        var k = document.documentElement;
+        var tema = 'koyu';
+        var anim = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'kapali' : 'acik';
+        try {
+          tema = localStorage.getItem('uzayli-tema') || tema;
+          anim = localStorage.getItem('uzayli-anim') || anim;
+        } catch (e) {}
+        k.dataset.tema = tema;
+        k.dataset.anim = anim;
+      })();
+    </script>
+    <slot name="head" />
+  </head>
+  <body data-sakin={sakin ? '' : undefined}>
+    <!-- Arka plan: bulutsu + yıldız alanı -->
+    <div class="uzay" aria-hidden="true">
+      <div class="bulutsu"></div>
+      <canvas id="yildiz-alani"></canvas>
+    </div>
+
+    <!-- Ana sayfada kara delik buraya (yıldızların önüne, içeriğin arkasına) yerleşir -->
+    <slot name="sahne" />
+
+    <!-- Kokpit çerçevesi -->
+    <div class="hud" aria-hidden="true">
+      <i></i><i></i><i></i><i></i>
+      <span class="hud-sol">{site.koordinat}</span>
+      <span class="hud-sag">{konum}</span>
+    </div>
+
+    <header class="ust">
+      <div class="ust-ic">
+        <a class="logo" href={yol()}><b></b>{site.ad}</a>
+        <button class="dugme menu-ac" aria-expanded="false" aria-label="Menüyü aç">Menü</button>
+        <nav class="menu" aria-label="Ana menü">
+          {
+            menu.map((m) => (
+              <a href={m.url} aria-current={su_an.startsWith(m.url) ? 'page' : undefined}>
+                {m.baslik}
+              </a>
+            ))
+          }
+        </nav>
+        <details class="ayarlar">
+          <summary class="dugme" aria-label="Ayarlar">Ayar</summary>
+          <div class="ayar-kutu">
+            <div>
+              <label>Tema</label>
+              <div>
+                <button class="dugme" data-tema-sec="koyu">Uzay</button>
+                <button class="dugme" data-tema-sec="gunduz">Gündüz</button>
+              </div>
+            </div>
+            <div>
+              <label>Animasyonlar</label>
+              <div>
+                <button class="dugme" data-anim-sec="acik">Açık</button>
+                <button class="dugme" data-anim-sec="kapali">Kapalı</button>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </header>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer class="alt">
+      {site.yazar} · {site.ad} · {new Date().getFullYear()}
+    </footer>
+
+    <script>
+      import { ayarPaneliKur } from '../scripts/ayarlar.js';
+      import { yildizAlaniKur } from '../scripts/yildiz-alani.js';
+      ayarPaneliKur();
+      yildizAlaniKur(document.getElementById('yildiz-alani'));
+    </script>
+  </body>
+</html>

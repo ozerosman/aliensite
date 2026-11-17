@@ -1,0 +1,39 @@
+---
+# OKUMA ÖZETİ ŞABLONU
+# Kullanım: bu dosyayı src/content/okumalar/<kitap-klasoru>/<bolum-adi>.mdx olarak kopyala.
+# Örnek: src/content/okumalar/schutz/bolum-01-ozel-gorelilik.mdx
+# Yeni bir kitap için yeni klasör açman yeter; düzgün ad vermek için site.config.ts'e eklersin.
+baslik: "Bölüm 1: Bölümün Adı"
+ozet: Bölümün tek cümlelik özeti.
+sira: 1                 # bölüm numarası
+etiketler: [genel görelilik]
+---
+
+import Not from '@/components/Not.astro';
+
+## Bölümün ana fikri
+
+Bu bölüm neyi kuruyor? Kitabın geri kalanında ne işe yarayacak? Üç beş cümle.
+
+## Önemli denklemler
+
+$$
+ds^2 = -c^2 dt^2 + dx^2 + dy^2 + dz^2
+$$
+
+Her denklemin altına: ne söylüyor, ne zaman kullanılıyor.
+
+## Kendi notlarım
+
+Takıldığım yerler, kitabın anlatımından farklı düşündüğüm noktalar, başka derslerle bağlantılar.
+
+## Sorular
+
+**1.** Bölüm sonu sorusu ya da kendi sorum.
+
+<details>
+<summary>Çözüm</summary>
+
+Çözüm.
+
+</details>

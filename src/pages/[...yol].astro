@@ -1,0 +1,218 @@
+---
+// TEK ŞABLON, ÜÇ TÜR SAYFA. Hepsi otomatik üretilir:
+//   /fizik/                               → bölüm sayfası (dersler ve konular)
+//   /fizik/klasik-mekanik/                → ders sayfası (konu listesi)
+//   /fizik/klasik-mekanik/basit-sarkac/   → konu sayfası (MDX içeriği)
+// Yeni bölüm/ders/konu için bu dosyaya dokunmana gerek yok.
+import { render } from 'astro:content';
+import 'katex/dist/katex.min.css';
+import Base from '../layouts/Base.astro';
+import KonuListesi from '../components/KonuListesi.astro';
+import { agac, tumKonular, sektorNo, seviyeAdi, yol, type Bolum, type Ders, type Konu } from '../lib/icerik';
+
+export async function getStaticPaths() {
+  const bolumler = await agac();
+  const konular = await tumKonular();
+  const sayfalar: { params: { yol: string }; props: Record<string, unknown> }[] = [];
+  const alinmis = new Set<string>();
+
+  for (const bolum of bolumler) {
+    sayfalar.push({ params: { yol: bolum.id }, props: { tur: 'bolum', bolum } });
+    alinmis.add(bolum.id);
+    for (const ders of bolum.dersler) {
+      sayfalar.push({ params: { yol: `${bolum.id}/${ders.id}` }, props: { tur: 'ders', bolum, ders } });
+      alinmis.add(`${bolum.id}/${ders.id}`);
+    }
+  }
+
+  for (const konu of konular) {
+    if (alinmis.has(konu.id)) {
+      throw new Error(`"src/content/${konu.id}" dosyasının adresi bir bölüm ya da ders sayfasıyla çakışıyor. Dosyanın adını değiştir.`);
+    }
+    const bolum = bolumler.find((b) => b.id === konu.bolum)!;
+    const ders = bolum.dersler.find((d) => d.id === konu.ders);
+    // Aynı dersteki (ya da derssizse aynı bölümdeki) sıraya göre bir önceki / bir sonraki sayfa
+    const kardesler = ders ? ders.konular : bolum.serbest;
+    const i = kardesler.findIndex((k) => k.id === konu.id);
+    const bul = (idler: string[]) => idler.map((id) => konular.find((k) => k.id === id)).filter(Boolean);
+    sayfalar.push({
+      params: { yol: konu.id },
+      props: {
+        tur: 'konu',
+        bolum,
+        ders,
+        konu,
+        siradakiOnceki: kardesler[i - 1],
+        siradakiSonraki: kardesler[i + 1],
+        onKosullar: bul(konu.onceki),
+        ileriKonular: bul(konu.ileri),
+      },
+    });
+  }
+  return sayfalar;
+}
+
+interface Props {
+  tur: 'bolum' | 'ders' | 'konu';
+  bolum: Bolum;
+  ders?: Ders;
+  konu?: Konu;
+  siradakiOnceki?: Konu;
+  siradakiSonraki?: Konu;
+  onKosullar?: Konu[];
+  ileriKonular?: Konu[];
+}
+const { tur, bolum, ders, konu, siradakiOnceki, siradakiSonraki, onKosullar = [], ileriKonular = [] } = Astro.props;
+
+const Icerik = konu ? (await render(konu.entry)).Content : null;
+const konum = `SEKTÖR ${sektorNo(bolum.sektor)}${ders ? '.' + sektorNo(ders.sektor) : ''} · ${bolum.baslik}`;
+---
+
+{/* ---------------- BÖLÜM SAYFASI ---------------- */}
+{
+  tur === 'bolum' && (
+    <Base baslik={bolum.baslik} aciklama={bolum.aciklama} konum={konum}>
+      <div class="sarici">
+        <header class="sayfa-bas">
+          <span class="etiket">SEKTÖR {sektorNo(bolum.sektor)}</span>
+          <h1>{bolum.baslik}</h1>
+          {bolum.aciklama && <p>{bolum.aciklama}</p>}
+        </header>
+
+        {bolum.dersler.map((d) => (
+          <section>
+            <div class="bolum-baslik">
+              <span class="etiket">
+                {sektorNo(bolum.sektor)}.{sektorNo(d.sektor)}
+              </span>
+              <h2>
+                <a href={d.url}>{d.baslik}</a>
+              </h2>
+              <small>{d.konular.length} KAYIT</small>
+            </div>
+            {d.aciklama && <p style="color:var(--soluk);margin:-0.4rem 0 1rem">{d.aciklama}</p>}
+            <KonuListesi konular={d.konular} bosYazi="Bu derste henüz konu yok." />
+          </section>
+        ))}
+
+        {(bolum.serbest.length > 0 || bolum.dersler.length === 0) && (
+          <section>
+            {bolum.dersler.length > 0 && (
+              <div class="bolum-baslik">
+                <h2>Diğer</h2>
+              </div>
+            )}
+            <KonuListesi konular={bolum.serbest} />
+          </section>
+        )}
+      </div>
+    </Base>
+  )
+}
+
+{/* ---------------- DERS SAYFASI ---------------- */}
+{
+  tur === 'ders' && ders && (
+    <Base baslik={`${ders.baslik} · ${bolum.baslik}`} aciklama={ders.aciklama} konum={konum}>
+      <div class="sarici">
+        <header class="sayfa-bas">
+          <nav class="iz">
+            <a href={bolum.url}>{bolum.baslik}</a> /
+          </nav>
+          <span class="etiket">
+            SEKTÖR {sektorNo(bolum.sektor)}.{sektorNo(ders.sektor)}
+          </span>
+          <h1>{ders.baslik}</h1>
+          {ders.aciklama && <p>{ders.aciklama}</p>}
+        </header>
+        <KonuListesi konular={ders.konular} bosYazi="Bu derste henüz konu yok." />
+      </div>
+    </Base>
+  )
+}
+
+{/* ---------------- KONU SAYFASI ---------------- */}
+{
+  tur === 'konu' && konu && Icerik && (
+    <Base baslik={konu.baslik} aciklama={konu.ozet} konum={konum} sakin>
+      <div class="sarici dar">
+        <header class="sayfa-bas">
+          <nav class="iz">
+            <a href={bolum.url}>{bolum.baslik}</a> /{' '}
+            {ders && (
+              <>
+                <a href={ders.url}>{ders.baslik}</a> /
+              </>
+            )}
+          </nav>
+          <h1>{konu.baslik}</h1>
+          {konu.ozet && <p>{konu.ozet}</p>}
+          <div>
+            {konu.seviye && <span class="rozet seviye">{seviyeAdi(konu.seviye)}</span>}
+            {konu.taslak && <span class="rozet taslak">Taslak · yayında görünmez</span>}
+            {konu.etiketler.map((e) => (
+              <span class="rozet">{e}</span>
+            ))}
+          </div>
+        </header>
+
+        {onKosullar.length > 0 && (
+          <p class="bos" style="margin-bottom:1rem">
+            // ÖNCE ŞUNU OKU:{' '}
+            {onKosullar.map((k, i) => (
+              <>
+                {i > 0 && ' · '}
+                <a href={k.url}>{k.baslik}</a>
+              </>
+            ))}
+          </p>
+        )}
+
+        <article class="yazi">
+          <Icerik />
+        </article>
+
+        {ileriKonular.length > 0 && (
+          <section>
+            <div class="bolum-baslik">
+              <span class="etiket">ROTA</span>
+              <h2>Daha ileri konular</h2>
+            </div>
+            <div class="izgara">
+              {ileriKonular.map((k) => (
+                <a class="panel" href={k.url}>
+                  <span class="etiket soluk">İLERİ →</span>
+                  <h3>{k.baslik}</h3>
+                  {k.ozet && <p>{k.ozet}</p>}
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {(siradakiOnceki || siradakiSonraki) && (
+          <nav class="gecis" aria-label="Sıradaki konular">
+            {siradakiOnceki ? (
+              <a class="panel" href={siradakiOnceki.url}>
+                <span class="etiket soluk">← ÖNCEKİ KONU</span>
+                <h3>{siradakiOnceki.baslik}</h3>
+              </a>
+            ) : (
+              <span />
+            )}
+            {siradakiSonraki && (
+              <a class="panel sag" href={siradakiSonraki.url}>
+                <span class="etiket soluk">SONRAKİ KONU →</span>
+                <h3>{siradakiSonraki.baslik}</h3>
+              </a>
+            )}
+          </nav>
+        )}
+
+        <p style="margin-top:2rem">
+          <a href={ders ? ders.url : bolum.url}>← {ders ? ders.baslik : bolum.baslik} listesine dön</a>
+        </p>
+      </div>
+    </Base>
+  )
+}

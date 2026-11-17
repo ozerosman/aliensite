@@ -1,0 +1,41 @@
+---
+// Renkli not kutusu. MDX içinde:
+//   import Not from '@/components/Not.astro';
+//   <Not tur="dikkat" baslik="Dikkat">Burada yazı...</Not>
+// tur: "bilgi" (varsayılan) | "dikkat" | "ipucu"
+interface Props {
+  tur?: 'bilgi' | 'dikkat' | 'ipucu';
+  baslik?: string;
+}
+const { tur = 'bilgi', baslik } = Astro.props;
+const varsayilan = { bilgi: 'Not', dikkat: 'Dikkat', ipucu: 'İpucu' }[tur];
+---
+
+<aside class:list={['not', tur]}>
+  <span class="etiket">{baslik ?? varsayilan}</span>
+  <div><slot /></div>
+</aside>
+
+<style>
+  .not {
+    --renk: var(--vurgu);
+    margin: 1.3rem 0;
+    padding: 0.8rem 1.1rem;
+    border: 1px solid color-mix(in srgb, var(--renk) 45%, transparent);
+    border-left-width: 3px;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--renk) 7%, transparent);
+  }
+  .not.dikkat {
+    --renk: var(--sicak);
+  }
+  .not.ipucu {
+    --renk: var(--vurgu-2);
+  }
+  .etiket {
+    color: var(--renk);
+  }
+  .not div :global(p:last-child) {
+    margin-bottom: 0;
+  }
+</style>

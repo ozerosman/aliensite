@@ -1,0 +1,307 @@
+---
+// ANA SAYFA: kara delik, tanıtım, yörüngedeki istasyonlar (kapılar) ve diğer bölümlerin kartları.
+// Hangi bölümün "istasyon" olacağını site.config.ts içindeki `kapi: true` belirler.
+import Base from '../layouts/Base.astro';
+import KaraDelik from '../components/KaraDelik.astro';
+import { site, ekSayfalar } from '../site.config';
+import { agac, sektorNo, yol } from '../lib/icerik';
+
+const bolumler = await agac();
+const kapilar = bolumler.filter((b) => b.kapi);
+const digerleri = bolumler.filter((b) => !b.kapi);
+---
+
+<Base>
+  <!-- Kara delik: ekrana sabitlenmiş sahne. İçerik bunun önünden kayar. -->
+  <div slot="sahne" class="sahne" id="sahne">
+    <KaraDelik />
+  </div>
+
+  <section class="giris" id="giris">
+    <div class="tanitim">
+      <span class="etiket">// GÖZLEMCİ KAYDI</span>
+      <h1>{site.ad}</h1>
+      <p>{site.tanitim}</p>
+    </div>
+
+    <!-- Yörüngedeki istasyonlar -->
+    <nav class="yorunge" id="yorunge" aria-label="Ana kapılar">
+      {
+        kapilar.map((b, i) => (
+          <a class="istasyon" href={b.url}>
+            <span class="etiket">İSTASYON {sektorNo(i + 1)}</span>
+            <strong>{b.baslik}</strong>
+            <small>{b.aciklama}</small>
+          </a>
+        ))
+      }
+    </nav>
+
+    <a class="asagi etiket soluk" href="#sektorler">▾ sektörler</a>
+  </section>
+
+  <div class="sarici" id="sektorler">
+    <div class="bolum-baslik">
+      <span class="etiket">HARİTA</span>
+      <h2>Sektörler</h2>
+    </div>
+    <div class="izgara">
+      {
+        digerleri.map((b) => (
+          <a class="panel" href={b.url}>
+            <span class="etiket">SEKTÖR {sektorNo(b.sektor)}</span>
+            <h3>{b.baslik}</h3>
+            {b.aciklama && <p>{b.aciklama}</p>}
+            <span class="rozet">{b.toplam} kayıt</span>
+          </a>
+        ))
+      }
+      {
+        ekSayfalar.map((s, i) => (
+          <a class="panel" href={yol(s.yol)}>
+            <span class="etiket">SEKTÖR {sektorNo(bolumler.length + i + 1)}</span>
+            <h3>{s.baslik}</h3>
+            {s.aciklama && <p>{s.aciklama}</p>}
+          </a>
+        ))
+      }
+    </div>
+
+    <!-- Kapıların içindeki dersler: kısa yol -->
+    {
+      kapilar.map((b) => (
+        <section>
+          <div class="bolum-baslik">
+            <span class="etiket">SEKTÖR {sektorNo(b.sektor)}</span>
+            <h2>
+              <a href={b.url}>{b.baslik}</a>
+            </h2>
+            <small>{b.toplam} KAYIT</small>
+          </div>
+          <div class="izgara">
+            {b.dersler.map((d) => (
+              <a class="panel" href={d.url}>
+                <span class="etiket soluk">
+                  {sektorNo(b.sektor)}.{sektorNo(d.sektor)}
+                </span>
+                <h3>{d.baslik}</h3>
+                {d.aciklama && <p>{d.aciklama}</p>}
+                <span class="rozet">{d.konular.length} kayıt</span>
+              </a>
+            ))}
+          </div>
+        </section>
+      ))
+    }
+  </div>
+</Base>
+
+<style>
+  .sahne {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+  /* Gündüz temasında kara delik yuvarlak bir "lomboz" içinde durur */
+  :global([data-tema='gunduz']) .sahne {
+    -webkit-mask-image: radial-gradient(circle at center, #000 22%, transparent 46%);
+    mask-image: radial-gradient(circle at center, #000 22%, transparent 46%);
+  }
+  :global([data-tema='gunduz']) .tanitim {
+    max-width: 17rem;
+  }
+  .giris {
+    position: relative;
+    height: calc(100svh - 56px);
+    min-height: 520px;
+  }
+  .tanitim {
+    position: absolute;
+    top: clamp(1.2rem, 5vh, 3.5rem);
+    left: max(1.4rem, calc((100vw - var(--genislik)) / 2 + 1.4rem));
+    max-width: 22rem;
+    text-shadow: 0 2px 14px var(--zemin);
+  }
+  .tanitim h1 {
+    font-size: clamp(2.6rem, 8vw, 4.6rem);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin: 0.2rem 0 0.4rem;
+    background: linear-gradient(100deg, var(--metin) 30%, var(--vurgu) 70%, var(--vurgu-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .tanitim p {
+    margin: 0;
+    font-size: 0.98rem;
+    line-height: 1.6;
+    color: color-mix(in srgb, var(--metin) 85%, transparent);
+  }
+  .yorunge {
+    position: absolute;
+    left: 50%;
+    top: 50%; /* gerçek merkez JavaScript ile ekranın ortasına hizalanır */
+    width: 0;
+    height: 0;
+  }
+  .istasyon {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 200px;
+    padding: 0.8rem 1rem;
+    color: var(--metin);
+    background: var(--panel);
+    border: 1px solid var(--cizgi-parlak);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: var(--parilti);
+    transform: translate(-50%, -50%);
+    will-change: transform;
+    display: grid;
+    gap: 0.1rem;
+  }
+  /* İstasyonun üstündeki küçük "anten" çizgisi */
+  .istasyon::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: -14px;
+    width: 1px;
+    height: 14px;
+    background: var(--cizgi-parlak);
+  }
+  .istasyon:hover,
+  .istasyon:focus-visible {
+    text-decoration: none;
+    border-color: var(--vurgu);
+    box-shadow: 0 0 28px rgba(95, 227, 255, 0.45);
+  }
+  .istasyon strong {
+    font-family: var(--yazi-baslik);
+    font-size: 1.5rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .istasyon small {
+    color: var(--soluk);
+    font-size: 0.78rem;
+    line-height: 1.35;
+  }
+  .asagi {
+    position: absolute;
+    left: 50%;
+    bottom: 1.2rem;
+    transform: translateX(-50%);
+  }
+  @media (max-width: 720px) {
+    .tanitim {
+      left: 1.2rem;
+      right: 1.2rem;
+      max-width: none;
+    }
+    .tanitim p {
+      font-size: 0.88rem;
+    }
+    .istasyon {
+      width: 104px;
+      padding: 0.55rem 0.5rem;
+      text-align: center;
+    }
+    .istasyon strong {
+      font-size: 0.82rem;
+    }
+    .istasyon small,
+    .istasyon .etiket {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  import { animAcik, ayarDegisince } from '../scripts/ayarlar.js';
+
+  const giris = document.getElementById('giris')!;
+  const yorunge = document.getElementById('yorunge')!;
+  const sahne = document.getElementById('sahne')!;
+  const istasyonlar = [...yorunge.querySelectorAll<HTMLElement>('.istasyon')];
+  const kdEl = sahne.querySelector<HTMLElement>('[data-kara-delik]')!;
+
+  // ---------- İstasyonların yörüngesi ----------
+  const TUR_SURESI = 80; // saniye: bir tam tur
+  const YATIS = (-7 * Math.PI) / 180; // kara deliğin yatış açısıyla aynı
+  let aci = 0;
+  let onceki = performance.now();
+  let beklet = false; // fare bir istasyonun üstündeyken yörünge durur (tıklaması kolay olsun)
+  let kareId = 0;
+
+  function yerlestir() {
+    const g = window.innerWidth;
+    const y = window.innerHeight;
+    // Yörüngenin merkezi = ekranın ortası = kara deliğin merkezi
+    yorunge.style.top = `${y / 2 - giris.offsetTop}px`;
+    const kart = istasyonlar[0]?.offsetWidth ?? 0;
+    const a = Math.min(Math.min(g, y) * (g < y ? 0.5 : 0.62), g / 2 - kart / 2 - 10); // yatay yarıçap
+    const b = a * 0.2; // düşey yarıçap (diske neredeyse kenardan bakıyoruz)
+    istasyonlar.forEach((el, i) => {
+      const t = aci + (i / istasyonlar.length) * Math.PI * 2;
+      const x0 = a * Math.cos(t);
+      const y0 = b * Math.sin(t);
+      const x = x0 * Math.cos(YATIS) - y0 * Math.sin(YATIS);
+      const yy = x0 * Math.sin(YATIS) + y0 * Math.cos(YATIS);
+      const on = Math.sin(t); // +1: bize en yakın, −1: deliğin arkasında
+      el.style.transform = `translate(-50%, -50%) translate(${x.toFixed(1)}px, ${yy.toFixed(1)}px) scale(${(0.9 + 0.1 * on).toFixed(3)})`;
+      el.style.opacity = (0.78 + 0.22 * on).toFixed(2);
+      el.style.zIndex = on > 0 ? '3' : '1';
+    });
+  }
+
+  function dongu(simdi: number) {
+    const dt = Math.min(0.1, (simdi - onceki) / 1000);
+    onceki = simdi;
+    if (!beklet) aci += (dt * Math.PI * 2) / TUR_SURESI;
+    yerlestir();
+    kareId = animAcik() && !document.hidden && window.scrollY < window.innerHeight ? requestAnimationFrame(dongu) : 0;
+  }
+  const uyandir = () => {
+    if (!kareId) {
+      onceki = performance.now();
+      kareId = requestAnimationFrame(dongu);
+    }
+  };
+  istasyonlar.forEach((el) => {
+    el.addEventListener('pointerenter', () => (beklet = true));
+    el.addEventListener('pointerleave', () => (beklet = false));
+    el.addEventListener('focus', () => (beklet = true));
+    el.addEventListener('blur', () => (beklet = false));
+  });
+
+  // ---------- Kaydırınca kara delik geride kalır ----------
+  let temelUzaklik: number | null = null;
+  function kaydir() {
+    const s = window.scrollY / window.innerHeight; // kaç ekran boyu aşağıdayız
+    const kd = (kdEl as any).karaDelik;
+    if (kd) {
+      temelUzaklik ??= kd.parametreler.uzaklik;
+      kd.ayarla({ uzaklik: temelUzaklik! * (1 + 1.4 * s) });
+    }
+    sahne.style.opacity = String(Math.max(0.28, 1 - Math.max(0, s - 0.35) * 0.9));
+    // Çok aşağıdaysak çizimi tamamen durdur (pil ve işlemci için)
+    const uyku = s > 3 ? '1' : '0';
+    if (kdEl.dataset.uyku !== uyku) {
+      kdEl.dataset.uyku = uyku;
+      kdEl.dispatchEvent(new CustomEvent('karadelik:guncelle'));
+    }
+    uyandir();
+  }
+
+  window.addEventListener('scroll', kaydir, { passive: true });
+  window.addEventListener('resize', uyandir);
+  document.addEventListener('visibilitychange', uyandir);
+  ayarDegisince(uyandir);
+  kdEl.addEventListener('karadelik:hazir', kaydir);
+  kaydir();
+</script>

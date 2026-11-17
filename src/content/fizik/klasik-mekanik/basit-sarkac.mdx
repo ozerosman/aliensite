@@ -1,0 +1,200 @@
+---
+baslik: Basit Sarkaç
+ozet: Küçük açı yaklaşımı ne zaman işe yarar, ne zaman yalan söyler? Denklemi adım adım kurup gerçek hareketle yan yana izliyoruz.
+seviye: giris
+sira: 1
+etiketler: [salınım, diferansiyel denklem, simülasyon]
+---
+
+import Sarkac from '@/components/sim/Sarkac.astro';
+import Not from '@/components/Not.astro';
+
+## Ne?
+
+Basit sarkaç, kütlesi ihmal edilen $L$ uzunluğunda bir ipin ucuna asılmış noktasal bir $m$ kütlesidir. Kütleyi düşeyden $\theta_0$ kadar ayırıp bırakırsan ileri geri salınır. Sürtünme ve hava direnci yok sayılır.
+
+Sormak istediğimiz iki şey var: açı zamanla nasıl değişir ve bir tam salınım (periyot, $T$) ne kadar sürer?
+
+## Sezgi
+
+Kütleyi dengeye geri çeken şey yerçekiminin **ipe dik** olan bileşenidir. İp boyunca olan bileşeni ip gerilmesi karşılar; o bileşen kütleyi sadece çember üzerinde tutar, hızlandırmaz.
+
+- Açı büyüdükçe geri çeken kuvvet büyür, ama açıyla doğru orantılı büyümez; $\sin\theta$ ile büyür. Küçük açılarda $\sin\theta$ ile $\theta$ neredeyse aynıdır, o yüzden sarkaç yay gibi davranır. Büyük açılarda $\sin\theta$ geride kalır, kuvvet "olması gerekenden" zayıftır ve sarkaç daha yavaş döner. Yani **genlik büyüdükçe periyot uzar**.
+- Kütle hem kuvvette (ağırlık) hem eylemsizlikte ($ma$) aynı şekilde yer alır ve sadeleşir. Ağır top ile hafif top aynı periyotla salınır.
+- İp uzarsa aynı açı için gidilecek yay uzar, periyot büyür. Yerçekimi artarsa geri çeken kuvvet artar, periyot küçülür.
+
+## Matematik
+
+### 1. Kuvveti yaz
+
+Kütleye iki kuvvet etki eder: ağırlık $mg$ (aşağı) ve ip gerilmesi (ip boyunca). Hareket çember üzerinde olduğu için işimize yarayan, çembere teğet olan bileşendir:
+
+$$
+F_t = -mg\sin\theta
+$$
+
+Eksi işareti kuvvetin her zaman açıyı küçültecek yönde olduğunu söyler: $\theta$ pozitifken kuvvet negatif yöndedir.
+
+### 2. İvmeyi açı cinsinden yaz
+
+Kütlenin çember üzerinde aldığı yol $s = L\theta$'dır (yay uzunluğu = yarıçap × açı). $L$ sabit olduğu için iki kez türev alınca teğetsel ivme çıkar:
+
+$$
+a_t = \frac{d^2 s}{dt^2} = L\,\frac{d^2\theta}{dt^2}
+$$
+
+Bunu yapmamızın nedeni tek bilinmeyenle ($\theta$) çalışmak; konumu $x$ ve $y$ ile yazsaydık iki bağlı denklemle uğraşırdık.
+
+### 3. Newton'un ikinci yasası
+
+$F_t = m a_t$ yazıp iki tarafı yerine koyarız:
+
+$$
+mL\,\frac{d^2\theta}{dt^2} = -mg\sin\theta
+\quad\Longrightarrow\quad
+\frac{d^2\theta}{dt^2} + \frac{g}{L}\sin\theta = 0
+$$
+
+$m$ sadeleşti: periyodun kütleye bağlı olmamasının matematikteki karşılığı budur. Bu denklem sarkacın **tam** hareket denklemidir, ama $\sin\theta$ yüzünden doğrusal değildir ve çözümü bildiğimiz basit fonksiyonlarla yazılamaz.
+
+### 4. Küçük açı yaklaşımı
+
+$\sin\theta$'nın seri açılımı:
+
+$$
+\sin\theta = \theta - \frac{\theta^3}{6} + \dots
+$$
+
+Açı küçükse (radyan cinsinden) $\theta^3/6$ terimi $\theta$'nın yanında çok küçüktür; onu atıp $\sin\theta \approx \theta$ alırız. Örneğin $10°$ için $\theta = 0.1745$, $\sin\theta = 0.1736$; fark binde 5. Denklem şuna döner:
+
+$$
+\frac{d^2\theta}{dt^2} + \omega^2\theta = 0, \qquad \omega = \sqrt{\frac{g}{L}}
+$$
+
+Bu, yaya bağlı kütleyle aynı denklemdir (basit harmonik hareket). Bu adımın bütün amacı doğrusal olmayan denklemi çözmesini bildiğimiz bir denkleme çevirmektir.
+
+### 5. Çözüm ve periyot
+
+İkinci türevi kendisinin eksi katı olan fonksiyonlar sinüs ve kosinüstür. Genel çözüm $\theta(t) = A\cos\omega t + B\sin\omega t$ olur. Başlangıç koşulları sabitleri belirler: kütleyi $\theta_0$ açısından durgun bıraktığımız için $\theta(0) = \theta_0$ ve $\dot\theta(0) = 0$, buradan $A = \theta_0$, $B = 0$:
+
+$$
+\theta(t) = \theta_0\cos\omega t
+$$
+
+Kosinüs $\omega T = 2\pi$ olduğunda kendini tekrar eder:
+
+$$
+T_0 = \frac{2\pi}{\omega} = 2\pi\sqrt{\frac{L}{g}}
+$$
+
+Dikkat et: $T_0$ içinde $\theta_0$ yok. Yaklaşıma göre periyot genlikten bağımsızdır.
+
+### 6. Gerçek periyot
+
+Yaklaşım yapmadan periyodu bulmak için enerji korunumunu kullanırız, çünkü enerji bize hızı doğrudan açı cinsinden verir ve denklemi çözmeden zamanı hesaplayabiliriz. En yüksek noktada ($\theta_0$) hız sıfırdır; oradan $\theta$ açısına inerken kaybedilen potansiyel enerji kinetik enerjiye dönüşür:
+
+$$
+\frac{1}{2}mL^2\dot\theta^2 = mgL\,(\cos\theta - \cos\theta_0)
+$$
+
+Buradan $\dot\theta = d\theta/dt$ çekilir ve $dt$ yalnız bırakılıp toplanır. $0$'dan $\theta_0$'a gitmek çeyrek periyot sürdüğü için başa 4 gelir:
+
+$$
+T = 4\sqrt{\frac{L}{2g}}\int_0^{\theta_0}\frac{d\theta}{\sqrt{\cos\theta - \cos\theta_0}}
+$$
+
+Bu integral kapalı biçimde alınamaz (eliptik integral), ama seriye açılabilir:
+
+$$
+T = T_0\left(1 + \frac{\theta_0^2}{16} + \frac{11\,\theta_0^4}{3072} + \dots\right)
+$$
+
+İlk düzeltme terimi $\theta_0^2/16$ yaklaşımın ne kadar hata yaptığını hemen söyler:
+
+| Başlangıç açısı | $T/T_0$ | Yaklaşımın hatası |
+| --- | --- | --- |
+| 10° | 1.0019 | %0.19 |
+| 30° | 1.0174 | %1.74 |
+| 60° | 1.0732 | %7.32 |
+| 90° | 1.1803 | %18.03 |
+
+### 7. Hareketin kendisi: sayısal çözüm
+
+Periyodu bulduk ama $\theta(t)$'nin kendisini büyük açılarda yazamıyoruz. Bunun için denklemi bilgisayara küçük zaman adımlarıyla çözdürürüz. İkinci derece denklemi iki birinci derece denkleme böleriz:
+
+$$
+\frac{d\theta}{dt} = w, \qquad \frac{dw}{dt} = -\frac{g}{L}\sin\theta
+$$
+
+Her adımda "şu anki açı ve hız buysa, çok kısa bir süre sonra ne olur?" sorusu cevaplanır. Aşağıdaki simülasyon bunu 4. derece Runge–Kutta (RK4) yöntemiyle yapıyor; RK4 bir adımın içinde eğimi dört ayrı noktada ölçüp ortalamasını aldığı için basit yönteme göre çok daha az hata biriktirir.
+
+## Simülasyon
+
+Solda küçük açı yaklaşımının söylediği hareket, sağda sayısal çözülmüş gerçek hareket var. Alttaki grafik ikisinin açısını zamana göre çiziyor.
+
+<Sarkac />
+
+Denemeye değer şeyler:
+
+- Açıyı $10°$ yap: iki sarkaç altı periyot boyunca neredeyse birlikte gider.
+- Açıyı $60°$ yap: gerçek sarkaç her turda biraz daha geride kalır; grafikte iki eğri arasındaki faz farkı büyür.
+- Açıyı $170°$ yap: gerçek sarkaç tepeye yakın uzun süre oyalanır, eğri kosinüse benzemez olur. Yaklaşım burada tamamen yanlıştır.
+- Uzunluğu ve yerçekimini değiştir: iki periyot da değişir ama aralarındaki **yüzde fark** değişmez; fark sadece açıya bağlıdır.
+
+## Dikkat
+
+<Not tur="dikkat">
+$\sin\theta \approx \theta$ sadece **radyan** için doğrudur. Dereceyle hesap yaparsan sonuç anlamsız çıkar.
+</Not>
+
+- "Küçük açı" kesin bir sınır değildir; ne kadar hataya razı olduğuna bağlıdır. Kabaca $15°$–$20°$'nin altında hata %1'in altındadır.
+- $T_0 = 2\pi\sqrt{L/g}$ formülünde $L$ ipin uzunluğu değil, askı noktasından **kütle merkezine** olan uzaklıktır.
+- İpin kütlesi ya da topun boyutu ihmal edilemiyorsa bu artık basit sarkaç değil, fiziksel sarkaçtır; eylemsizlik momenti hesaba girer.
+- Gerçek dünyada sürtünme vardır ve genlik zamanla küçülür. Burada o yok.
+
+## Soru
+
+**1.** Aynı sarkacı Ay'a götürürsen periyodu kaç katına çıkar? ($g_{\text{Ay}} = 1.62\ \text{m/s}^2$)
+
+<details>
+<summary>Çözüm</summary>
+
+Periyot $1/\sqrt{g}$ ile orantılıdır, uzunluk aynı kalır:
+
+$$
+\frac{T_{\text{Ay}}}{T_{\text{Dünya}}} = \sqrt{\frac{9.81}{1.62}} \approx 2.46
+$$
+
+Simülasyonda "Ay" düğmesine basıp periyot değerlerinden kontrol edebilirsin.
+
+</details>
+
+**2.** Bir yarım salınımı (bir uçtan öbür uca) tam 1 saniye süren sarkacın boyu ne olmalı? ($g = 9.81\ \text{m/s}^2$, küçük açı)
+
+<details>
+<summary>Çözüm</summary>
+
+Yarım salınım 1 s ise $T_0 = 2\ \text{s}$. Formülden $L$ çekilir:
+
+$$
+L = g\left(\frac{T_0}{2\pi}\right)^2 = 9.81 \times \left(\frac{2}{2\pi}\right)^2 \approx 0.994\ \text{m}
+$$
+
+Yaklaşık 1 metre. Buna "saniye sarkacı" denir.
+
+</details>
+
+**3.** Küçük açı yaklaşımının periyotta yaptığı hata hangi açıda %1'e ulaşır?
+
+<details>
+<summary>Çözüm</summary>
+
+İlk düzeltme terimini %1'e eşitleriz:
+
+$$
+\frac{\theta_0^2}{16} = 0.01 \quad\Longrightarrow\quad \theta_0 = 0.4\ \text{rad} \approx 23°
+$$
+
+Simülasyonda açıyı $23°$ yapınca "Fark" kutusunda yaklaşık %1 görürsün.
+
+</details>

@@ -1,0 +1,88 @@
+---
+// Kara delik bileşeni. Motor src/scripts/kara-delik.js içinde; bu dosya onu sayfaya yerleştirir.
+//
+// Kullanım (herhangi bir .astro ya da .mdx sayfasında):
+//   <KaraDelik />                                         varsayılan ayarlarla
+//   <KaraDelik parametreler={{ egim: 60, donme: 0.9 }} />  özel ayarlarla
+//
+// Dışarıdan kontrol (ör. kaydırıcılarla): bileşenin dış <div>'i hazır olunca `karadelik:hazir`
+// olayını yayar ve motoru `el.karaDelik` üzerine koyar:
+//   el.karaDelik.ayarla({ kutle: 2 })
+import { dosya } from '../lib/icerik';
+
+interface Props {
+  parametreler?: Record<string, unknown>;
+  /** WebGL yoksa gösterilecek durağan görüntü (public klasöründen). */
+  yedek?: string;
+}
+const { parametreler = {}, yedek = 'kara-delik.webp' } = Astro.props;
+---
+
+<div class="kara-delik" data-kara-delik data-parametreler={JSON.stringify(parametreler)}>
+  <img class="kd-yedek" src={dosya(yedek)} alt="" decoding="async" />
+  <canvas aria-label="Gerçek zamanlı kara delik simülasyonu" role="img"></canvas>
+</div>
+
+<style>
+  .kara-delik {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+  canvas,
+  .kd-yedek {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .kd-yedek {
+    object-fit: contain;
+  }
+  canvas {
+    opacity: 0;
+    transition: opacity 0.8s ease;
+  }
+  /* WebGL çalışınca tuval görünür, yedek görüntü gizlenir */
+  .kara-delik:global(.hazir) canvas {
+    opacity: 1;
+  }
+  .kara-delik:global(.hazir) .kd-yedek {
+    display: none;
+  }
+</style>
+
+<script>
+  import { karaDelikOlustur } from '../scripts/kara-delik.js';
+  import { animAcik, ayarDegisince } from '../scripts/ayarlar.js';
+
+  document.querySelectorAll<HTMLElement>('[data-kara-delik]').forEach((el) => {
+    const canvas = el.querySelector('canvas')!;
+    const kd = karaDelikOlustur(canvas, JSON.parse(el.dataset.parametreler || '{}'));
+    if (!kd) return; // WebGL yok: yedek görüntü kalır
+
+    let gorunur = true;
+    const guncelle = () => {
+      // Animasyon açık, sekme önde ve bileşen ekrandaysa çalış; değilse dur.
+      if (animAcik() && gorunur && !document.hidden && el.dataset.uyku !== '1') kd.baslat();
+      else {
+        kd.durdur();
+        if (!animAcik()) kd.tekKare();
+      }
+    };
+    new IntersectionObserver((g) => {
+      gorunur = g[0].isIntersecting;
+      guncelle();
+    }).observe(el);
+    document.addEventListener('visibilitychange', guncelle);
+    ayarDegisince(guncelle);
+    el.addEventListener('karadelik:guncelle', guncelle);
+
+    (el as any).karaDelik = kd;
+    kd.tekKare();
+    el.classList.add('hazir');
+    guncelle();
+    el.dispatchEvent(new CustomEvent('karadelik:hazir', { bubbles: true, detail: kd }));
+  });
+</script>

@@ -1,0 +1,727 @@
+/* ==========================================================================
+   Genel stil dosyası. Renkler ve ölçüler en üstteki değişkenlerde durur;
+   temayı değiştirmek için çoğu zaman sadece bu değişkenlere dokunman yeter.
+   ========================================================================== */
+
+/* ---- Koyu uzay teması (varsayılan) ---- */
+:root {
+  --zemin: #04050b;
+  --zemin-2: #0a0e1c;
+  --panel: rgba(13, 19, 38, 0.55);
+  --panel-koyu: rgba(7, 10, 22, 0.82);
+  --cizgi: rgba(125, 205, 255, 0.2);
+  --cizgi-parlak: rgba(125, 225, 255, 0.55);
+  --metin: #dde5f4;
+  --soluk: #8e9bb8;
+  --vurgu: #5fe3ff; /* camgöbeği */
+  --vurgu-2: #a98bff; /* mor */
+  --sicak: #ffb86b; /* disk turuncusu */
+  --parilti: 0 0 18px rgba(95, 227, 255, 0.25);
+  --yazi-baslik: 'Space Grotesk Variable', 'Space Grotesk', system-ui, sans-serif;
+  --yazi-metin: 'Inter Variable', 'Inter', system-ui, sans-serif;
+  --yazi-hud: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
+  --genislik: 1120px;
+  --okuma: 760px;
+  color-scheme: dark;
+}
+
+/* ---- Gündüz teması ---- */
+:root[data-tema='gunduz'] {
+  --zemin: #e9eef7;
+  --zemin-2: #f6f8fc;
+  --panel: rgba(255, 255, 255, 0.72);
+  --panel-koyu: rgba(255, 255, 255, 0.92);
+  --cizgi: rgba(30, 70, 120, 0.2);
+  --cizgi-parlak: rgba(10, 110, 150, 0.55);
+  --metin: #141b2d;
+  --soluk: #56617a;
+  --vurgu: #087ea4;
+  --vurgu-2: #6a4bd6;
+  --sicak: #c2620a;
+  --parilti: 0 0 0 rgba(0, 0, 0, 0);
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--zemin);
+  color: var(--metin);
+  font-family: var(--yazi-metin);
+  font-size: 17px;
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+a {
+  color: var(--vurgu);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+:focus-visible {
+  outline: 2px solid var(--vurgu);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--yazi-baslik);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.5em;
+}
+h1 {
+  font-size: clamp(2rem, 5vw, 3.1rem);
+}
+
+img,
+canvas,
+svg {
+  max-width: 100%;
+}
+
+/* ---------- Arka plan katmanları ---------- */
+.uzay {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.uzay canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+/* Bulutsu: üç yumuşak renk lekesi, çok yavaş dalgalanır. */
+.bulutsu {
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(40% 35% at 22% 28%, rgba(110, 70, 220, 0.2), transparent 70%),
+    radial-gradient(45% 40% at 78% 65%, rgba(30, 150, 200, 0.14), transparent 70%),
+    radial-gradient(50% 45% at 55% 10%, rgba(30, 50, 150, 0.2), transparent 70%);
+  animation: bulutsu 70s ease-in-out infinite alternate;
+}
+@keyframes bulutsu {
+  from {
+    transform: translate3d(-2%, -1%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(3%, 2%, 0) scale(1.12);
+  }
+}
+/* İçerik sayfalarında arka plan daha sakin ve koyu. */
+body[data-sakin] .uzay {
+  opacity: 0.5;
+}
+:root[data-tema='gunduz'] .uzay canvas {
+  display: none;
+}
+:root[data-tema='gunduz'] .bulutsu {
+  opacity: 0.6;
+}
+:root[data-anim='kapali'] .bulutsu {
+  animation: none;
+}
+
+/* ---------- HUD (kokpit) çerçevesi ---------- */
+.hud {
+  position: fixed;
+  inset: 10px;
+  z-index: 40;
+  pointer-events: none;
+  font-family: var(--yazi-hud);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  color: var(--soluk);
+  text-transform: uppercase;
+}
+.hud i {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--cizgi-parlak);
+  opacity: 0.7;
+}
+.hud i:nth-child(1) {
+  top: 0;
+  left: 0;
+  border-right: 0;
+  border-bottom: 0;
+}
+.hud i:nth-child(2) {
+  top: 0;
+  right: 0;
+  border-left: 0;
+  border-bottom: 0;
+}
+.hud i:nth-child(3) {
+  bottom: 0;
+  left: 0;
+  border-right: 0;
+  border-top: 0;
+}
+.hud i:nth-child(4) {
+  bottom: 0;
+  right: 0;
+  border-left: 0;
+  border-top: 0;
+}
+.hud span {
+  position: absolute;
+  bottom: 6px;
+}
+.hud .hud-sol {
+  left: 34px;
+}
+.hud .hud-sag {
+  right: 34px;
+}
+@media (max-width: 720px) {
+  .hud span {
+    display: none;
+  }
+  .hud {
+    inset: 5px;
+  }
+  .hud i {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/* ---------- Üst menü ---------- */
+.ust {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  background: linear-gradient(var(--panel-koyu), var(--panel));
+  border-bottom: 1px solid var(--cizgi);
+}
+.ust-ic {
+  max-width: var(--genislik);
+  margin: 0 auto;
+  padding: 0.6rem 1.4rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.logo {
+  font-family: var(--yazi-baslik);
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: var(--metin);
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.logo:hover {
+  text-decoration: none;
+  color: var(--vurgu);
+}
+.logo b {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #000;
+  box-shadow:
+    0 0 0 2px var(--sicak),
+    0 0 12px var(--sicak);
+}
+.menu {
+  display: flex;
+  gap: 0.2rem;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+.menu a {
+  font-family: var(--yazi-hud);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--soluk);
+  padding: 0.45rem 0.7rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+}
+.menu a:hover,
+.menu a[aria-current='page'] {
+  color: var(--vurgu);
+  border-color: var(--cizgi);
+  text-decoration: none;
+  background: rgba(95, 227, 255, 0.06);
+}
+.dugme {
+  font: inherit;
+  font-family: var(--yazi-hud);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--metin);
+  background: transparent;
+  border: 1px solid var(--cizgi);
+  border-radius: 6px;
+  padding: 0.45rem 0.7rem;
+  cursor: pointer;
+}
+.dugme:hover {
+  border-color: var(--cizgi-parlak);
+  color: var(--vurgu);
+}
+.dugme[aria-pressed='true'] {
+  border-color: var(--vurgu);
+  color: var(--vurgu);
+  box-shadow: var(--parilti);
+}
+.menu-ac {
+  display: none;
+}
+.ayarlar {
+  position: relative;
+}
+.ayarlar summary {
+  list-style: none;
+}
+.ayarlar summary::-webkit-details-marker {
+  display: none;
+}
+.ayar-kutu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  width: 240px;
+  padding: 1rem;
+  display: grid;
+  gap: 0.8rem;
+  background: var(--panel-koyu);
+  border: 1px solid var(--cizgi);
+  border-radius: 10px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.ayar-kutu label {
+  font-family: var(--yazi-hud);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--soluk);
+  display: block;
+  margin-bottom: 0.35rem;
+}
+.ayar-kutu div div {
+  display: flex;
+  gap: 0.4rem;
+}
+.ayar-kutu .dugme {
+  flex: 1;
+}
+@media (max-width: 860px) {
+  .menu-ac {
+    display: inline-block;
+    margin-left: auto;
+  }
+  .menu {
+    display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    flex-direction: column;
+    padding: 0.6rem 1rem 1rem;
+    background: var(--panel-koyu);
+    border-bottom: 1px solid var(--cizgi);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+  .menu.acik {
+    display: flex;
+  }
+  .menu a {
+    padding: 0.8rem 0.6rem;
+    font-size: 13px;
+  }
+}
+
+/* ---------- Sayfa gövdesi ---------- */
+main {
+  position: relative;
+  z-index: 10;
+}
+.sarici {
+  max-width: var(--genislik);
+  margin: 0 auto;
+  padding: 2.5rem 1.4rem 4rem;
+}
+.sarici.dar {
+  max-width: calc(var(--okuma) + 2.8rem);
+}
+.alt {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  padding: 2rem 1rem 3rem;
+  font-family: var(--yazi-hud);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--soluk);
+  text-transform: uppercase;
+}
+
+/* Küçük HUD etiketi: "SEKTÖR 01" gibi */
+.etiket {
+  font-family: var(--yazi-hud);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--vurgu);
+}
+.etiket.soluk {
+  color: var(--soluk);
+}
+.sayfa-bas {
+  margin-bottom: 2rem;
+}
+.sayfa-bas p {
+  color: var(--soluk);
+  max-width: 60ch;
+  margin: 0;
+}
+.iz {
+  font-family: var(--yazi-hud);
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--soluk);
+  margin-bottom: 0.8rem;
+}
+.iz a {
+  color: var(--soluk);
+}
+.iz a:hover {
+  color: var(--vurgu);
+}
+
+/* ---------- Buzlu cam panel / kart ---------- */
+.panel {
+  position: relative;
+  background: var(--panel);
+  border: 1px solid var(--cizgi);
+  border-radius: 12px;
+  backdrop-filter: blur(12px) saturate(130%);
+  -webkit-backdrop-filter: blur(12px) saturate(130%);
+  padding: 1.3rem 1.4rem;
+}
+/* Köşelerdeki ince kokpit çizgileri */
+.panel::before,
+.panel::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--cizgi-parlak);
+  pointer-events: none;
+  transition: all 0.25s ease;
+}
+.panel::before {
+  top: -1px;
+  left: -1px;
+  border-right: 0;
+  border-bottom: 0;
+  border-top-left-radius: 12px;
+}
+.panel::after {
+  bottom: -1px;
+  right: -1px;
+  border-left: 0;
+  border-top: 0;
+  border-bottom-right-radius: 12px;
+}
+a.panel {
+  display: block;
+  color: var(--metin);
+  transition:
+    border-color 0.2s,
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+a.panel:hover {
+  text-decoration: none;
+  border-color: var(--cizgi-parlak);
+  box-shadow: var(--parilti);
+  transform: translateY(-2px);
+}
+a.panel:hover::before,
+a.panel:hover::after {
+  width: 28px;
+  height: 28px;
+}
+.panel h3 {
+  font-size: 1.15rem;
+  margin: 0.3rem 0 0.3rem;
+}
+.panel p {
+  margin: 0;
+  color: var(--soluk);
+  font-size: 0.93rem;
+  line-height: 1.5;
+}
+.izgara {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+.bolum-baslik {
+  display: flex;
+  align-items: baseline;
+  gap: 0.9rem;
+  margin: 2.6rem 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--cizgi);
+}
+.bolum-baslik h2 {
+  font-size: 1.35rem;
+  margin: 0;
+}
+.bolum-baslik h2 a {
+  color: var(--metin);
+}
+.bolum-baslik small {
+  margin-left: auto;
+  font-family: var(--yazi-hud);
+  font-size: 11px;
+  color: var(--soluk);
+  letter-spacing: 0.08em;
+}
+.rozet {
+  display: inline-block;
+  font-family: var(--yazi-hud);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.12rem 0.5rem;
+  border: 1px solid var(--cizgi);
+  border-radius: 99px;
+  color: var(--soluk);
+  margin: 0.5rem 0.3rem 0 0;
+}
+.rozet.seviye {
+  color: var(--vurgu-2);
+  border-color: color-mix(in srgb, var(--vurgu-2) 50%, transparent);
+}
+.rozet.taslak {
+  color: var(--sicak);
+  border-color: color-mix(in srgb, var(--sicak) 50%, transparent);
+}
+.bos {
+  color: var(--soluk);
+  font-family: var(--yazi-hud);
+  font-size: 12.5px;
+  letter-spacing: 0.04em;
+  border: 1px dashed var(--cizgi);
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+}
+.suzgec {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+/* ---------- Yazı (içerik) alanı ---------- */
+.yazi {
+  background: var(--panel-koyu);
+  border: 1px solid var(--cizgi);
+  border-radius: 14px;
+  padding: clamp(1.2rem, 4vw, 2.6rem);
+  counter-reset: kisim;
+}
+.yazi > :first-child {
+  margin-top: 0;
+}
+.yazi h2 {
+  counter-increment: kisim;
+  font-size: 1.55rem;
+  margin: 2.6rem 0 0.9rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--cizgi);
+}
+/* Her ana başlığın önüne "01 //" biçiminde sektör numarası */
+.yazi h2::before {
+  content: counter(kisim, decimal-leading-zero) ' // ';
+  font-family: var(--yazi-hud);
+  font-size: 0.72em;
+  color: var(--vurgu);
+  letter-spacing: 0.08em;
+}
+.yazi h3 {
+  font-size: 1.2rem;
+  margin: 1.9rem 0 0.6rem;
+}
+.yazi p,
+.yazi ul,
+.yazi ol {
+  margin: 0 0 1.1rem;
+}
+.yazi li {
+  margin-bottom: 0.35rem;
+}
+.yazi strong {
+  color: color-mix(in srgb, var(--metin) 85%, var(--vurgu));
+}
+.yazi blockquote {
+  margin: 1.2rem 0;
+  padding: 0.2rem 1.1rem;
+  border-left: 2px solid var(--vurgu-2);
+  color: var(--soluk);
+}
+.yazi code {
+  font-family: var(--yazi-hud);
+  font-size: 0.88em;
+  background: rgba(125, 205, 255, 0.1);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+}
+.yazi pre {
+  padding: 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--cizgi);
+  overflow-x: auto;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+.yazi pre code {
+  background: none;
+  padding: 0;
+}
+.yazi table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.2rem 0;
+  font-size: 0.94rem;
+  display: block;
+  overflow-x: auto;
+}
+.yazi th,
+.yazi td {
+  border-bottom: 1px solid var(--cizgi);
+  padding: 0.5rem 0.7rem;
+  text-align: left;
+}
+.yazi th {
+  font-family: var(--yazi-hud);
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--soluk);
+}
+.yazi details {
+  border: 1px solid var(--cizgi);
+  border-radius: 10px;
+  padding: 0.7rem 1rem;
+  margin: 0 0 1rem;
+}
+.yazi details[open] summary {
+  margin-bottom: 0.7rem;
+}
+.yazi summary {
+  cursor: pointer;
+  font-family: var(--yazi-hud);
+  font-size: 12.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--vurgu);
+}
+.yazi img {
+  border-radius: 10px;
+  height: auto;
+}
+/* Denklemler: uzun olanlar telefonda yana kaydırılabilsin, metin rengiyle net çıksın. */
+.yazi .katex {
+  font-size: 1.08em;
+}
+.yazi .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5rem 0;
+  margin: 1.2rem 0;
+}
+
+/* Konu sonu bağlantıları */
+.gecis {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+.gecis .sag {
+  text-align: right;
+}
+@media (max-width: 600px) {
+  .gecis {
+    grid-template-columns: 1fr;
+  }
+  .gecis .sag {
+    text-align: left;
+  }
+}
+
+/* ---------- Sayfa geçişi: kısa "warp" ----------
+   Tarayıcının kendi sayfa geçişi (View Transitions) kullanılır; JavaScript gerekmez.
+   Desteklemeyen tarayıcıda sayfa normal şekilde açılır. */
+@view-transition {
+  navigation: auto;
+}
+::view-transition-old(root) {
+  animation: warp-cikis 0.28s cubic-bezier(0.5, 0, 1, 0.5) both;
+}
+::view-transition-new(root) {
+  animation: warp-giris 0.42s cubic-bezier(0, 0.6, 0.3, 1) both;
+}
+@keyframes warp-cikis {
+  to {
+    transform: scale(1.35);
+    opacity: 0;
+    filter: blur(6px) brightness(1.6);
+  }
+}
+@keyframes warp-giris {
+  from {
+    transform: scale(0.82);
+    opacity: 0;
+    filter: blur(6px);
+  }
+}
+
+/* Animasyonlar kapalıysa (ayarlardan ya da işletim sisteminden) hepsi durur. */
+:root[data-anim='kapali'] *,
+:root[data-anim='kapali'] *::before,
+:root[data-anim='kapali'] *::after {
+  animation-duration: 0.001s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001s !important;
+  scroll-behavior: auto !important;
+}
+:root[data-anim='kapali']::view-transition-group(*),
+:root[data-anim='kapali']::view-transition-old(*),
+:root[data-anim='kapali']::view-transition-new(*) {
+  animation: none !important;
+}

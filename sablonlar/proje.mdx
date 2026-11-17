@@ -1,0 +1,53 @@
+---
+# PROJE SAYFASI ŞABLONU
+# Kullanım: bu dosyayı src/content/projeler/<proje-adi>.mdx olarak kopyala.
+baslik: Projenin Adı
+ozet: Liste sayfasında görünecek bir cümlelik özet.
+sira: 10
+etiketler: [etiket1]
+# tarih: 2026-11-17
+# taslak: true          # bitene kadar yayında gizlemek için
+---
+
+import Foto from '@/components/Foto.astro';
+import Not from '@/components/Not.astro';
+
+{/* Fotoğraflar: dosyayı public/gorseller/<proje-adi>/ klasörüne koy,
+    <Foto src="gorseller/<proje-adi>/dosya.jpg" aciklama="..." /> yaz.
+    src yazmazsan yer tutucu kutu görünür. */}
+
+## Amaç
+
+Ne yapmak istedim, neden?
+
+<Foto aciklama="Bitmiş halinin fotoğrafı" />
+
+## Malzemeler
+
+| Malzeme | Adet | Not |
+| --- | --- | --- |
+| | | |
+
+## Adımlar
+
+### 1. İlk adım
+
+Ne yaptım, nasıl yaptım.
+
+<Foto aciklama="Bu adımın fotoğrafı" />
+
+### 2. İkinci adım
+
+...
+
+## Sonuç
+
+Çalıştı mı? Ölçümler, sayılar.
+
+## Öğrendiklerim
+
+Bir dahaki sefere neyi farklı yaparım.
+
+## Fotoğraflar
+
+<Foto aciklama="Diğer fotoğraflar" />

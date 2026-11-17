@@ -1,0 +1,23 @@
+---
+// Bölümlere bağlı olmayan tekil sayfalar için düzen (ör. src/pages/hakkimda.mdx).
+// Kullanmak için MDX dosyasının başına şunu yaz:
+//   layout: ../layouts/Sayfa.astro
+//   baslik: Sayfa başlığı
+import 'katex/dist/katex.min.css';
+import Base from './Base.astro';
+
+const { frontmatter } = Astro.props;
+---
+
+<Base baslik={frontmatter.baslik} aciklama={frontmatter.aciklama} konum={`KAYIT · ${frontmatter.baslik}`} sakin>
+  <div class="sarici dar">
+    <header class="sayfa-bas">
+      <span class="etiket">// KAYIT</span>
+      <h1>{frontmatter.baslik}</h1>
+      {frontmatter.aciklama && <p>{frontmatter.aciklama}</p>}
+    </header>
+    <article class="yazi">
+      <slot />
+    </article>
+  </div>
+</Base>

@@ -1,0 +1,56 @@
+---
+// Konu kartlarının listesi. Listede seviyesi olan konu varsa üstte seviye süzgeci çıkar.
+import { seviyeAdi, type Konu } from '../lib/icerik';
+
+interface Props {
+  konular: Konu[];
+  /** Liste boşsa gösterilecek yazı. */
+  bosYazi?: string;
+}
+const { konular, bosYazi = 'Bu sektörde henüz kayıt yok. İlk MDX dosyasını eklediğinde burada görünecek.' } = Astro.props;
+const seviyeler = [...new Set(konular.map((k) => k.seviye).filter(Boolean))] as string[];
+---
+
+{
+  konular.length === 0 ? (
+    <p class="bos">// {bosYazi}</p>
+  ) : (
+    <div data-konu-listesi>
+      {seviyeler.length > 1 && (
+        <div class="suzgec" role="group" aria-label="Seviyeye göre süz">
+          <button class="dugme" data-seviye="" aria-pressed="true">Hepsi</button>
+          {seviyeler.map((s) => (
+            <button class="dugme" data-seviye={s} aria-pressed="false">{seviyeAdi(s)}</button>
+          ))}
+        </div>
+      )}
+      <div class="izgara">
+        {konular.map((k, i) => (
+          <a class="panel" href={k.url} data-seviye={k.seviye ?? ''}>
+            <span class="etiket soluk">KAYIT {String(i + 1).padStart(2, '0')}</span>
+            <h3>{k.baslik}</h3>
+            {k.ozet && <p>{k.ozet}</p>}
+            {k.seviye && <span class="rozet seviye">{seviyeAdi(k.seviye)}</span>}
+            {k.taslak && <span class="rozet taslak">Taslak</span>}
+            {k.etiketler.map((e) => <span class="rozet">{e}</span>)}
+          </a>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+<script>
+  // Seviye süzgeci: seçilen seviyeye uymayan kartları gizler.
+  document.querySelectorAll<HTMLElement>('[data-konu-listesi]').forEach((liste) => {
+    const dugmeler = liste.querySelectorAll<HTMLButtonElement>('.suzgec button');
+    dugmeler.forEach((d) =>
+      d.addEventListener('click', () => {
+        dugmeler.forEach((x) => x.setAttribute('aria-pressed', String(x === d)));
+        liste.querySelectorAll<HTMLElement>('.izgara > a').forEach((k) => {
+          k.hidden = !!d.dataset.seviye && k.dataset.seviye !== d.dataset.seviye;
+        });
+      }),
+    );
+  });
+</script>
